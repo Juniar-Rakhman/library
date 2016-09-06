@@ -80,7 +80,7 @@ public class BookController {
                 QBook book = QBook.book;
                 bookList =  query.from(book)
                         .where(book.title.eq(filter.getTitle())
-                                .and(book.category.eq(filter.getCategory())))
+                                .or(book.category.eq(filter.getCategory())))
                         .list(book);
             }
             entity.put("payload", bookList);
