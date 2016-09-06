@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.sql.Date;
-import java.util.List;
 
 /**
  * Created by a9jr5626 on 8/27/16.
@@ -79,7 +78,10 @@ public class BookController {
                 bookList = bookRepo.findAll();
             } else {
                 QBook book = QBook.book;
-                bookList =  query.from(book).where(book.title.eq(filter.getTitle()).and(book.category.eq(filter.getCategory()))).list(book);
+                bookList =  query.from(book)
+                        .where(book.title.eq(filter.getTitle())
+                                .and(book.category.eq(filter.getCategory())))
+                        .list(book);
             }
             entity.put("payload", bookList);
             entity.put("success", true);

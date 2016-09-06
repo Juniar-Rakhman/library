@@ -1,6 +1,9 @@
 package com.rithm.controller;
 
+import com.mysema.query.jpa.JPQLQuery;
+import com.mysema.query.jpa.impl.JPAQuery;
 import com.rithm.entity.Book;
+import com.rithm.entity.QTransaction;
 import com.rithm.entity.Transaction;
 import com.rithm.repository.BookRepository;
 import com.rithm.repository.TransactionRepository;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.sql.Date;
 import java.util.Calendar;
 
@@ -29,6 +34,10 @@ public class TransactionController {
 
     @Autowired
     TransactionRepository transRepo;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
 
     @RequestMapping(value = "/api/transactions", method = RequestMethod.POST)
     public @ResponseBody
@@ -60,13 +69,20 @@ public class TransactionController {
     public @ResponseBody
     ResponseEntity<Object> transactionHistory (@RequestBody Transaction filter){
         JSONObject entity = new JSONObject();
+        JPQLQuery query = new JPAQuery(entityManager);
         try {
             Iterable<Transaction> transList = null;
             if (filter == null) {
                 transList = transRepo.findAll();
             } else {
-                //TODO: This sucks. Learn to use querydsl
-                transList = transRepo.findByStartDt(filter.getStartDt());
+                QTransaction transaction = QTransaction.transaction;
+                transList = query.from(transaction)
+                        .where(transaction.startDt.eq(filter.getStartDt())
+                                .or(transaction.bookId.eq(filter.getBookId()))
+                                .or(transaction.memberId.eq(filter.getMemberId()))
+                                .or(transaction.returnDt.eq(filter.getReturnDt())))
+                        .list(transaction);
+
             }
             entity.put("payload", transList);
             entity.put("success", true);
